@@ -3,20 +3,19 @@
     <h1>Downloader Video YouTube Gratis</h1>
     <p class="text-muted mb-4">Tempelkan tautan video YouTube di bawah ini</p>
 
-    <!-- Input -->
-    <form @submit.prevent="downloadVideo">
+    <form @submit.prevent="fungsiDapatkanResolusi">
       <div class="input-group mb-3">
         <input
           type="text"
           class="form-control"
           placeholder="Tempel tautan video YouTube di sini..."
           v-model="videoLink"
+          required
         />
         <button class="btn btn-orange" type="submit">Download</button>
       </div>
     </form>
 
-    <!-- Deskripsi -->
     <div class="description">
       <p>
         <strong>Platform ini sepenuhnya gratis</strong> dan berfungsi untuk
@@ -25,7 +24,6 @@
       </p>
     </div>
 
-    <!-- Modal Preview -->
     <div
       class="modal fade"
       id="previewModal"
@@ -47,8 +45,8 @@
 
           <div class="modal-body text-center">
             <img
-              v-if="thumbnailUrl"
-              :src="thumbnailUrl"
+              v-if="resolusi.thumbnail"
+              :src="resolusi.thumbnail"
               alt="Thumbnail"
               class="img-fluid rounded mb-3"
             />
@@ -62,13 +60,19 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(option, i) in resolutions" :key="i">
-                  <td>{{ option.quality }}</td>
-                  <td>{{ option.size }}</td>
+                <tr v-for="(item, index) in resolusi.resolutions" :key="index">
+                  <td>{{ item.resolution }}</td>
+                  <td>
+                    {{
+                      item.filesize_mb
+                        ? item.filesize_mb + " MB"
+                        : "Tidak diketahui"
+                    }}
+                  </td>
                   <td>
                     <button
                       class="btn btn-orange btn-sm"
-                      @click="simulateDownload(option)"
+                      @click="fungsiDownloadVideo(item.format_id)"
                     >
                       Download
                     </button>
@@ -89,15 +93,10 @@ export default {
     return {
       videoLink: "",
       thumbnailUrl: "",
-      resolutions: [
-        { quality: "720p", size: "50 MB" },
-        { quality: "480p", size: "30 MB" },
-        { quality: "360p", size: "20 MB" },
-      ],
+      resolusi: [],
     };
   },
   methods: {
-    // Ambil ID video dari URL YouTube
     extractVideoId(url) {
       const match = url.match(
         /(?:https?:\/\/)?(?:www\.)?youtu(?:\.be\/|be\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/
@@ -105,28 +104,36 @@ export default {
       return match ? match[1] : null;
     },
 
-    // Saat klik tombol Download
-    downloadVideo() {
-      if (!this.videoLink) {
-        alert("Masukkan tautan video terlebih dahulu.");
-        return;
-      }
-
-      const videoId = this.extractVideoId(this.videoLink);
-
-      // Buat thumbnail dari ID
-      this.thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-
-      // Tampilkan modal Bootstrap
+    fungsiDapatkanResolusi: async function () {
+      this.resolusi = (
+        await this.$api.$get(
+          `/resolutions?url=${encodeURIComponent(this.videoLink)}`
+        )
+      ).data;
       const modal = new bootstrap.Modal(
         document.getElementById("previewModal")
       );
       modal.show();
     },
 
-    // Simulasi tombol Download di dalam modal
-    simulateDownload(option) {
-      alert(`Mengunduh versi ${option.quality} (${option.size})...`);
+    async fungsiDownloadVideo(format_id) {
+      if (!this.videoLink || !format_id) {
+        alert("Tautan atau format tidak valid.");
+        return;
+      }
+
+      try {
+        const downloadUrl = `${
+          process.env.API_URL || "http://localhost:5000"
+        }/download?url=${encodeURIComponent(
+          this.videoLink
+        )}&format_id=${format_id}`;
+
+        window.open(downloadUrl, "_blank");
+      } catch (error) {
+        console.error("Gagal memulai download:", error);
+        alert("Terjadi kesalahan saat mencoba mendownload video.");
+      }
     },
   },
 };
