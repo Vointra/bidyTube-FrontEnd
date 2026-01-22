@@ -12,10 +12,13 @@
     "@nuxtjs/axios": "^5.13.6",
     "bootstrap": "^5.3.8",
     "core-js": "^3.25.3",
-    "nuxt": "^2.15.8",
+    "nuxt": "^4.2.2",
     "nuxt-sweetalert2": "^1.0.0",
-    "vue": "^2.7.10",
-    "vue-server-renderer": "^2.7.10",
-    "vue-template-compiler": "^2.7.10"
+    "vue": "^3.5.27",
+    "vue-server-renderer": "^2.2.6",
+    "vue-template-compiler": "^0.1.0"
+  },
+  "devDependencies": {
+    "baseline-browser-mapping": "^2.9.17"
   }
 }
